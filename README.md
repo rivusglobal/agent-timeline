@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <strong>A time breakdown for your AI coding agent sessions.</strong><br>
+  Point it at a Claude Code, Codex or OpenCode session and it draws an interactive timeline<br>
+  of where the time went: coding, tests, polling, git, or just waiting on you.
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20OpenCode-111111?style=flat-square" alt="Works with Claude Code, Codex, OpenCode">
   <img src="https://img.shields.io/badge/dependencies-none-111111?style=flat-square" alt="No dependencies">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
@@ -24,6 +30,28 @@
 </p>
 
 ---
+
+## Demo
+
+```console
+$ python3.12 agent_timeline.py --open
+agent-timeline: reading claude session ~/.claude/projects/.../3f2a91c0.jsonl
+/tmp/agent-timeline-x8k2.html          # opens in your browser
+```
+
+For a 41-minute session, the page tells you:
+
+| Phase | Time | |
+|---|---|---|
+| human wait | 20 min | the agent asked "Want me to do the refunds client too?" and sat until you answered |
+| async wait | 14 min | idle on a background test run it could have checked sooner |
+| local commands | 2.4 min | the payments test run |
+| waiting/polling | 1.2 min | `sleep 55; gh pr checks` |
+| git/PR, reading, editing, thinking | ~3 min | everything else |
+
+Then **"How to deliver faster"** lists what to change, biggest saving first, for example: *"Waiting for you is 50% of tracked time. Batch questions into one message and let the agent continue past low-risk decisions."*
+
+**[Try it live in your browser](https://rivusglobal.github.io/agent-timeline/demo.html)**: hover any block, click to pin, scroll to zoom. It is a made-up session, nothing real in it.
 
 A 40-minute session is rarely 40 minutes of work. Some of it is the model thinking, some of it is tests, some of it is the agent polling a job it could have been told about, and a lot of it is waiting for you to type. The transcript has every timestamp. Nobody reads a transcript.
 

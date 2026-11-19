@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agent-timeline",
+  "description": "One-click timeline of where an AI coding agent session's time went.",
+  "owner": { "name": "rivusfounder", "url": "https://github.com/rivusfounder" },
+  "plugins": [
+    {
+      "name": "agent-timeline",
+      "description": "Zoomable timeline of an agent session by phase: implementing, tests, polling, git, waiting on you.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

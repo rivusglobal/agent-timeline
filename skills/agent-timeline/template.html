@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>agent-timeline</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#14181f;--mut:#5b6472;--card:#fff;--line:#dfe3ea;--lane:#eef0f4;--sel:#1f6feb33;
+--implementing:#1a9e6b;--local:#e08a00;--poll:#8a5cf6;--git:#d6455d;--reading:#3b9bd9;--deleg:#b86bd1;--shell:#8b95a5;--tools:#6f7f95;--think:#2bb3b3;--compact:#e5533d;--async:#b9bfcc;--human:#e0c46a;--idle:#d5d8df;
+--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1116;--fg:#e6e9ef;--mut:#9aa4b2;--card:#161b22;--line:#2a313c;--lane:#1c222b;--sel:#58a6ff33;--async:#4a5261;--human:#8a7a3c;--idle:#2a303a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 Inter,system-ui,sans-serif;padding:16px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+main{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font:600 22px/1.2 "Space Grotesk",Inter,sans-serif;margin:0}
+.sub{color:var(--mut);margin:2px 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.legend button{all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center;padding:2px 6px;border-radius:4px;font-variant-numeric:tabular-nums}
+.legend button:focus-visible{outline:2px solid var(--fg)}
+.legend button[aria-pressed=false]{opacity:.35}
+.sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+svg{display:block;width:100%;touch-action:none;user-select:none}
+svg text{fill:var(--mut);font:11px var(--mono)}
+#main{cursor:grab}#main.drag{cursor:grabbing}
+.row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;color:var(--mut);font-size:13px}
+.btn{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:5px;padding:3px 10px;color:var(--fg)}
+.btn:focus-visible{outline:2px solid var(--fg)}
+#tip{font:13px var(--mono);min-height:20px}
+#tip span{white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+td.n,th.n{text-align:right}
+.scroll{overflow-x:auto}
+h2{font:600 17px/1.3 "Space Grotesk",Inter,sans-serif;margin:0 0 4px}
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0}
+.kpi b{display:block;font:600 22px/1.2 "Space Grotesk",sans-serif;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--mut)}
+</style></head><body>
+<main>
+<header><h1>agent-timeline</h1>
+<p class="sub" id="sub"></p></header>
+<div class="kpis" id="kpis"></div>
+<div class="card">
+<div class="legend" id="legend" style="margin-bottom:10px"></div>
+<div class="row"><span>Scroll to zoom, drag to pan, double-click to reset. Faded = model time before a call. Long idle gaps are shortened.</span>
+<span><button class="btn" id="zin">Zoom in</button> <button class="btn" id="zout">Zoom out</button> <button class="btn" id="reset">Reset</button></span></div>
+<svg id="main" height="300" role="img" aria-label="Session timeline, zoomable"></svg>
+<svg id="mini" height="46" role="img" aria-label="Overview; drag to choose the window"></svg>
+<div id="tip" style="margin-top:8px;min-height:44px;color:var(--mut);font:13px/1.5 var(--mono)">Hover a block to see what was happening. Click to pin it; click empty space to unpin.</div></div>
+<div class="cols">
+<div class="card"><h2>How to deliver faster</h2>
+<p class="sub">Known patterns matched against this session, biggest estimated saving first. Estimates are rough rules of thumb (for example 70% of polling time), not measurements, and overlapping ones should not be added up.</p>
+<ol id="sug" style="margin:12px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:12px"></ol></div>
+<div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+<div class="card"><div class="row"><b style="color:var(--fg)">In view</b><span id="vr"></span></div>
+<div class="scroll"><table><thead><tr><th>Phase</th><th class="n">Time</th><th class="n">Active share</th></tr></thead><tbody id="stats"></tbody></table></div></div>
+<div class="card" id="subcard" hidden><b style="color:var(--fg)">Subagents</b>
+<div class="scroll"><table><thead><tr><th>Subagent</th><th class="n">Ran</th><th>Mostly</th></tr></thead><tbody id="subtab"></tbody></table></div></div>
+</div></div>
+<details class="card"><summary><b>How these numbers are computed</b></summary>
+<ul style="color:var(--mut);max-width:78ch">
+<li><b style="color:var(--fg)">Source.</b> The agent's own session log. It stores timestamps but no tool durations, so every duration is a difference between two timestamps.</li>
+<li><b style="color:var(--fg)">Model time</b> (faded blocks): from the last prompt or tool result to the end of the assistant message that follows. <b style="color:var(--fg)">Tool time</b>: from the end of that message to the last tool result. Parallel tool calls share one wall interval, charged to the slowest call's phase.</li>
+<li><b style="color:var(--fg)">Phase</b> of a tool call comes from its name and, for shell commands, a pattern match (test and lint runners are local commands, sleep/watch loops are polling, git and gh are git/PR). Patterns can misclassify unusual commands.</li>
+<li><b style="color:var(--fg)">Waiting</b> after a reply with no tool call is human wait if your prompt came next, otherwise async wait (background jobs or subagents). Gaps over 30 minutes are idle, excluded from "active" and drawn compressed.</li>
+<li><b style="color:var(--fg)">Context compaction</b> is read from the log's compaction record, which carries its own duration and token counts. That time is carved out of the surrounding wait or model time, and the synthetic summary message is not counted as a prompt.</li>
+<li><b style="color:var(--fg)">Limits.</b> Labels are the tool call's description or first command line, redacted for obvious secrets and truncated. Block boundaries are only as precise as log timestamps.</li>
+</ul></details>
+</main>
+<script>
+const D=__DATA__;
+const LANES=[['implementing','--implementing'],['local commands','--local'],['waiting/polling','--poll'],['git/PR','--git'],['reading','--reading'],['delegation','--deleg'],['other shell','--shell'],['other tools','--tools'],['thinking/answering','--think'],['context compaction','--compact'],['async wait','--async'],['human wait','--human'],['idle (long gap)','--idle']];
+const ACTIVE=new Set(LANES.slice(0,10).map(l=>l[0])), NS='http://www.w3.org/2000/svg';
+const on=new Set([...LANES.map(l=>l[0]),'subagents']), laneOf=Object.fromEntries(LANES.map((l,i)=>[l[0],i]));
+const col=p=>`var(${LANES[laneOf[p]][1]})`;
+const stamp=off=>new Date((D.t0+off)*1000);
+const fmtT=(off,sec,withDate)=>{const d=stamp(off);const t=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',...(sec?{second:'2-digit'}:{}),hour12:false});return withDate?d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+t:t};
+const dayOf=off=>stamp(off).toLocaleDateString([],{month:'short',day:'numeric'});
+const fmt=s=>s>=3600?(s/3600).toFixed(2)+' h':s>=60?(s/60).toFixed(1)+' min':s.toFixed(0)+' s';
+const mk=(p,n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+document.getElementById('sub').textContent=`${D.agent} session ${D.session}: ${fmt(D.real_span)} wall clock. Hover a block for what was happening; click to pin.`;
+const M=document.getElementById('main'), N=document.getElementById('mini'), LH=22, TOP=6, X0=190, AX=36, SL=16, SUBS=D.subs||[], SUBTOP=TOP+LANES.length*LH+(SUBS.length?14:0), H=SUBTOP+SUBS.length*SL+AX;
+const toDisp=off=>{const R=D.rows;let lo=0,hi=R.length-1,k=0;while(lo<=hi){const m=(lo+hi)>>1;if(R[m][5]<=off){k=m;lo=m+1}else hi=m-1}const r=R[k];return r[0]+Math.min(Math.max(off-r[5],0),r[2])*(r[1]/Math.max(r[2],1e-9))};
+M.setAttribute('height',H);
+let v0=0,v1=D.span,W=800;
+const clamp=()=>{const min=Math.min(10,D.span);let w=Math.max(min,Math.min(D.span,v1-v0));if(v0<0)v0=0;if(v0+w>D.span)v0=D.span-w;v1=v0+w};
+const xs=t=>X0+(W-X0-8)*(t-v0)/(v1-v0), tx=x=>v0+(x-X0)*(v1-v0)/(W-X0-8);
+function ticks(a,b){const span=b-a,steps=[1,2,5,10,30,60,120,300,600,1800,3600,7200,14400],s=steps.find(x=>span/x<=10)||14400;const out=[];for(let t=Math.ceil(a/s)*s;t<=b;t+=s)out.push(t);return out}
+function draw(){
+ W=M.getBoundingClientRect().width||800; M.setAttribute('viewBox',`0 0 ${W} ${H}`);M.replaceChildren();
+ LANES.forEach(([n],i)=>{mk(M,'rect',{x:X0,y:TOP+i*LH,width:W-X0-8,height:LH-3,fill:'var(--lane)',opacity:on.has(n)?1:.4});const t=mk(M,'text',{x:X0-6,y:TOP+i*LH+14,'text-anchor':'end'});t.textContent=n});
+ let lastDay='';
+ ticks(v0,v1).forEach(t=>{const x=xs(t);mk(M,'line',{x1:x,x2:x,y1:TOP,y2:H-AX+4,stroke:'var(--line)'});
+  const off=realAt(t),l=mk(M,'text',{x,y:H-AX+16,'text-anchor':'middle'});l.textContent=fmtT(off,v1-v0<600);
+  const day=dayOf(off);if(day!==lastDay){lastDay=day;const d=mk(M,'text',{x,y:H-AX+29,'text-anchor':'middle'});d.textContent=day}});
+ for(const [idx,r] of D.rows.entries()){const [s,w,real,ph,model]=r;if(s+w<v0||s>v1||!on.has(ph))continue;const px=(W-X0-8)*w/(v1-v0);if(px<0.3)continue;
+  const e=mk(M,'rect',{x:xs(s),y:TOP+laneOf[ph]*LH,width:Math.max(1,px),height:LH-3,fill:col(ph),opacity:model?.55:1});e.dataset.i=idx}
+ drawSubs();stats();mini()}
+function drawSubs(){if(!SUBS.length)return;
+ const t0=mk(M,'text',{x:6,y:SUBTOP-4});t0.textContent='SUBAGENTS';
+ SUBS.forEach((s,i)=>{const y=SUBTOP+i*SL,sw=W-X0-8;
+  mk(M,'rect',{x:X0,y,width:sw,height:SL-3,fill:'var(--lane)',opacity:on.has('subagents')?1:.4});
+  const lb=mk(M,'text',{x:X0-6,y:y+11,'text-anchor':'end'});{const full=`${s.type}${s.desc?': '+s.desc:''}`;lb.textContent=full.length>26?full.slice(0,25)+'\u2026':full}
+  if(!on.has('subagents'))return;
+  const a=toDisp(s.start),b=toDisp(s.end);
+  if(b>=v0&&a<=v1){const x1=xs(Math.max(a,v0)),x2=xs(Math.min(b,v1));const sp=mk(M,'rect',{x:x1,y,width:Math.max(2,x2-x1),height:SL-3,fill:'var(--fg)',opacity:.14});sp.dataset.sub=i}
+  s.segs.forEach(([o,d,ph,model],k)=>{if(!on.has(ph)||ph==='idle (long gap)')return;const sa=toDisp(o),sb=toDisp(o+d);if(sb<v0||sa>v1)return;const px=(W-X0-8)*(sb-sa)/(v1-v0);if(px<0.3)return;
+   const r=mk(M,'rect',{x:xs(sa),y:y+2,width:Math.max(1,px),height:SL-7,fill:col(ph),opacity:model?.55:1});r.dataset.sub=i;r.dataset.k=k})})}
+function showSub(i,k){const s=SUBS[i],el=document.getElementById('tip');const top=Object.entries(s.by).filter(([p])=>p!=='idle (long gap)').sort((a,b)=>b[1]-a[1]).slice(0,4).map(([p,v])=>`${p} ${fmt(v)}`).join(', ');
+ const seg=k!==undefined?s.segs[+k]:null;
+ el.innerHTML='<b></b> &middot; <span></span><br><span style="color:var(--fg)"></span>';
+ const [b,sp,ln]=[el.querySelector('b'),el.querySelectorAll('span')[0],el.querySelectorAll('span')[1]];
+ b.textContent=`subagent ${s.type}${s.desc?': '+s.desc:''}`;sp.textContent=`${fmt(s.end-s.start)} &middot; ${fmtT(s.start,true)} to ${fmtT(s.end,true)}`.replace('&middot;','·');
+ ln.textContent=seg?`${seg[2]}${seg[3]?' (model time)':''}, ${fmt(seg[1])}${seg[4]?': '+seg[4]:''}`:`Mostly: ${top}`}
+function realAt(t){let lo=0,hi=D.rows.length-1,r=D.rows[0];for(const q of D.rows){if(q[0]<=t)r=q;else break}const k=r[1]>0?r[2]/r[1]:0;return r[5]+Math.min(Math.max(t-r[0],0)*k,r[2])}
+function stats(){const tot={};let act=0;
+ for(const [s,w,real,ph] of D.rows){const o=Math.min(s+w,v1)-Math.max(s,v0);if(o<=0||!on.has(ph))continue;const x=real*o/w;tot[ph]=(tot[ph]||0)+x;if(ACTIVE.has(ph))act+=x}
+ document.getElementById('vr').textContent=`${fmtT(realAt(v0),true,true)} to ${fmtT(realAt(v1),true,true)}`;
+ document.getElementById('stats').innerHTML=LANES.map(l=>l[0]).filter(p=>tot[p]).sort((a,b)=>tot[b]-tot[a]).map(p=>`<tr><td><i class="sw" style="background:${col(p)}"></i> ${p}</td><td class="n">${fmt(tot[p])}</td><td class="n">${ACTIVE.has(p)&&act?(100*tot[p]/act).toFixed(1)+'%':'–'}</td></tr>`).join('')}
+function mini(){const w=N.getBoundingClientRect().width||800;N.setAttribute('viewBox',`0 0 ${w} 46`);N.replaceChildren();
+ mk(N,'rect',{x:0,y:4,width:w,height:34,fill:'var(--lane)'});
+ for(const [s,d,,ph,model] of D.rows){if(!on.has(ph)||model)continue;const x=w*s/D.span,ww=w*d/D.span;if(ww<0.3)continue;mk(N,'rect',{x,y:4+laneOf[ph]*2.7,width:Math.max(1,ww),height:2.5,fill:col(ph)})}
+ mk(N,'rect',{x:w*v0/D.span,y:2,width:Math.max(4,w*(v1-v0)/D.span),height:38,fill:'var(--sel)',stroke:'var(--fg)','stroke-width':1})}
+// interaction
+function zoom(f,cx){const a=tx(cx);const w=(v1-v0)*f;v0=a-(a-v0)*f;v1=v0+w;clamp();draw()}
+M.addEventListener('wheel',e=>{e.preventDefault();const r=M.getBoundingClientRect();zoom(e.deltaY>0?1.25:0.8,e.clientX-r.left)},{passive:false});
+let drag=null;
+// hit-test by lane + time with pixel tolerance so 1px blocks and the gaps between them are hoverable
+function pick(e){const r=M.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(x<X0||y<TOP)return -1;const lane=Math.floor((y-TOP)/LH);if(lane<0||lane>=LANES.length)return -1;
+ const t=tx(x),tol=6*(v1-v0)/(W-X0-8);let best=-1,bd=1e18;
+ for(let i=0;i<D.rows.length;i++){const [s,w,,ph]=D.rows[i];if(laneOf[ph]!==lane||!on.has(ph))continue;if(s>t+tol||s+w<t-tol)continue;const d=t<s?s-t:t>s+w?t-s-w:0;if(d<bd){bd=d;best=i}}return best}
+M.addEventListener('pointerdown',e=>{down=e.clientX;downTarget=e.target;drag={x:e.clientX,v:v0};M.classList.add('drag');M.setPointerCapture(e.pointerId)});
+M.addEventListener('pointermove',e=>{if(drag){const dx=e.clientX-drag.x;const w=v1-v0;v0=drag.v-dx*w/(W-X0-8);v1=v0+w;clamp();draw();return}
+ const t=e.target;if(pinned===null){if(t.dataset&&t.dataset.sub!==undefined)showSub(+t.dataset.sub,t.dataset.k);else{const i=pick(e);if(i>=0)show(i)}}});
+let pinned=null;
+function show(i){const [s,w,real,ph,model,rs,label]=D.rows[i];const el=document.getElementById('tip');
+ el.innerHTML=`<b style="color:${col(ph)}">${ph}${model?' (model time)':''}</b> &middot; ${fmt(real)} &middot; ${fmtT(rs,true)}${pinned===i?' &middot; pinned':''}${label?`<br><span style="color:var(--fg)"></span>`:''}`;
+ if(label)el.querySelector('span').textContent=label}
+let down=null,downTarget=null;
+M.addEventListener('pointerup',e=>{const t=downTarget,click=drag&&Math.abs(e.clientX-down)<4;
+ if(click){const pi=pick(e);if(t&&t.dataset&&t.dataset.sub!==undefined){pinned=-1;showSub(+t.dataset.sub,t.dataset.k)}else if(pi>=0){pinned=pi;show(pinned)}else{pinned=null;document.getElementById('tip').textContent='Hover a block to see what was happening. Click to pin it; click empty space to unpin.'}}
+ drag=null;M.classList.remove('drag')});
+M.addEventListener('pointercancel',()=>{drag=null;M.classList.remove('drag')});
+M.addEventListener('dblclick',reset);
+function reset(){v0=0;v1=D.span;draw()}
+document.getElementById('reset').onclick=reset;
+document.getElementById('zin').onclick=()=>zoom(0.5,(W+X0)/2);
+document.getElementById('zout').onclick=()=>zoom(2,(W+X0)/2);
+let md=false;
+const setFromMini=e=>{const r=N.getBoundingClientRect();const c=D.span*(e.clientX-r.left)/r.width,w=v1-v0;v0=c-w/2;v1=v0+w;clamp();draw()};
+N.addEventListener('pointerdown',e=>{md=true;N.setPointerCapture(e.pointerId);setFromMini(e)});
+N.addEventListener('pointermove',e=>{if(md)setFromMini(e)});N.addEventListener('pointerup',()=>md=false);
+window.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoom(0.7,(W+X0)/2);if(e.key==='-')zoom(1.4,(W+X0)/2);if(e.key==='0')reset()});
+// legend
+const tot={};D.rows.forEach(r=>tot[r[3]]=(tot[r[3]]||0)+r[2]);
+const lg=document.getElementById('legend');
+LANES.forEach(([n])=>{if(!tot[n])return;const b=document.createElement('button');b.setAttribute('aria-pressed','true');b.innerHTML=`<i class="sw" style="background:${col(n)}"></i>${n} ${fmt(tot[n])}`;b.onclick=()=>{on.has(n)?on.delete(n):on.add(n);b.setAttribute('aria-pressed',on.has(n));draw()};lg.appendChild(b)});
+function suggest(){
+ const T={};D.rows.forEach(r=>T[r[3]]=(T[r[3]]||0)+r[2]);const t=k=>T[k]||0;
+ const A=[...ACTIVE].reduce((s,k)=>s+t(k),0)||1, pct=x=>(100*x/A).toFixed(0)+'%';
+ const nonIdle=A+t('human wait')+t('async wait');
+ const toolRows=D.rows.filter(r=>!r[4]&&ACTIVE.has(r[3])&&r[6]);
+ const NORM=l=>l.replace(/\b[0-9a-f]{7,}\b/g,'#').replace(/temp_\w+/g,'temp').replace(/\d+/g,'N').slice(0,90);
+ const by={};toolRows.forEach(r=>{const k=NORM(r[6]);(by[k]=by[k]||{n:0,s:0,ph:r[3],ex:r[6]});by[k].n++;by[k].s+=r[2]});
+ const rep=Object.entries(by).filter(([,v])=>v.n>=3&&v.s>=20&&(v.s>=120||v.n>=5)).sort((a,b)=>b[1].s-a[1].s).slice(0,3);
+ // independent quick lookups issued one per model turn (could be one message with parallel calls)
+ const RO=new Set(['reading','other shell','other tools','git/PR']),runs=[];let cur=[];
+ const quick=r=>RO.has(r[3])&&r[6]&&!r[6].includes('in parallel')&&r[2]<60;
+ D.rows.filter(r=>!r[4]&&ACTIVE.has(r[3])).sort((a,b)=>a[5]-b[5]).forEach(r=>{const last=cur[cur.length-1];
+  if(quick(r)&&(!last||r[5]-(last[5]+last[2])<90))cur.push(r);else{if(cur.length>=3)runs.push(cur);cur=quick(r)?[r]:[]}});
+ if(cur.length>=3)runs.push(cur);
+ const runCalls=runs.reduce((s,x)=>s+x.length,0),runGap=runs.reduce((s,x)=>s+x.slice(1).reduce((g,r,i)=>g+Math.max(0,r[5]-(x[i][5]+x[i][2])),0),0);
+ // subagents launched one after another (each starting soon after the previous ended)
+ const chains=[];let ch=[];[...SUBS].sort((a,b)=>a.start-b.start).forEach(s=>{const last=ch[ch.length-1];
+  if(last&&s.start>=last.end-1&&s.start-last.end<300)ch.push(s);else{if(ch.length>=2)chains.push(ch);ch=[s]}});
+ if(ch.length>=2)chains.push(ch);
+ const chainSave=chains.reduce((s,c)=>s+c.reduce((a,x)=>a+(x.end-x.start),0)-Math.max(...c.map(x=>x.end-x.start)),0);
+ const polls=toolRows.filter(r=>r[3]==='waiting/polling').sort((a,b)=>b[2]-a[2]);
+ const big=D.rows.filter(r=>!r[4]&&ACTIVE.has(r[3])).sort((a,b)=>b[2]-a[2]).slice(0,3);
+ const out=[];
+ if(t('waiting/polling')/A>0.15)out.push([`Polling and sleeping is ${pct(t('waiting/polling'))} of active time (${fmt(t('waiting/polling'))})`,`Replace sleep loops with a background command plus a completion notification (a monitor), or one blocking call with a timeout, so the agent is not re-checking.${polls[0]?` Longest: ${polls[0][6]} (${fmt(polls[0][2])}).`:''}`,0.7*t('waiting/polling')]);
+ rep.forEach(([k,v])=>out.push([`Repeated ${v.n} times, ${fmt(v.s)} in total: ${v.ex}`,`Near-identical steps (${v.ph}), after ignoring numbers, hashes and temp file names. Script it, cache its result, or batch it into one call.`,0.6*v.s*(v.n-1)/v.n]));
+ if(runCalls>=6)out.push([`${runCalls} independent lookups were issued one at a time (${runs.length} runs of 3 or more)`,`Each waited for its own model turn, about ${fmt(runGap)} in all. Reads, greps and status checks that do not depend on each other can go in one message as parallel tool calls. Example: ${runs[0].slice(0,3).map(r=>r[6]).join(' | ')}`,0.7*runGap]);
+ if(chains.length)out.push([`${chains.reduce((s,c)=>s+c.length,0)} subagents ran back to back in ${chains.length} chain${chains.length>1?'s':''}`,`Example: ${chains[0].map(x=>x.type+(x.desc?': '+x.desc:'')).slice(0,3).join(' then ')}. If they do not depend on each other (for instance a code review and a security review of the same commit), launch them in one message so they run at the same time. Running each chain concurrently would take ${fmt(chains.reduce((s,c)=>s+Math.max(...c.map(x=>x.end-x.start)),0))} instead of ${fmt(chains.reduce((s,c)=>s+c.reduce((a,x)=>a+(x.end-x.start),0),0))}. Later ones that need an earlier result cannot be parallelized.`,0.5*chainSave]);
+ if(t('local commands')/A>0.15)out.push([`Tests and local commands take ${pct(t('local commands'))} of active time (${fmt(t('local commands'))})`,'Run only the tests the change touches while developing, keep the full suite for the final gate, and run it in the background while doing other work.',0.3*t('local commands')]);
+ if(t('git/PR')/A>0.1)out.push([`Git and PR work takes ${pct(t('git/PR'))} of active time (${fmt(t('git/PR'))})`,'Long git calls usually mean a slow host or a large repo: check fetch size, worktree count and shallow clones. Batch status checks instead of polling.',0.3*t('git/PR')]);
+ const nc=D.rows.filter(r=>r[3]==='context compaction');
+ if(nc.length)out.push([`${nc.length} context compaction${nc.length>1?'s':''} cost ${fmt(t('context compaction'))}`,`${nc.map(r=>r[6]).filter(Boolean).join('; ')||'Compaction ran'}. Each one also drops detail the agent then re-reads. Send noisy work (large searches, long logs) to subagents and keep tool output short to delay it.`,0.5*t('context compaction')]);
+ if(t('human wait')/Math.max(nonIdle,1)>0.25)out.push([`Waiting for you is ${(100*t('human wait')/nonIdle).toFixed(0)}% of tracked time (${fmt(t('human wait'))})`,'Batch questions into one message, state defaults the agent may take on its own, and let it continue past low-risk decisions.',0.3*t('human wait')]);
+ if(t('async wait')/Math.max(nonIdle,1)>0.2)out.push([`${(100*t('async wait')/nonIdle).toFixed(0)}% of tracked time is the agent idle on background work (${fmt(t('async wait'))})`,'Give it independent work to do while jobs run, or shorten the jobs (smaller scope, cloud runner).',0.3*t('async wait')]);
+ if(SUBS.length){const st=SUBS.reduce((s,x)=>s+(x.end-x.start),0),sb=[...SUBS].sort((a,b)=>(b.end-b.start)-(a.end-a.start))[0];out.push([`${SUBS.length} subagents ran for ${fmt(st)} in total`,`Longest: ${sb.type}${sb.desc?': '+sb.desc:''} (${fmt(sb.end-sb.start)}). Brief subagents narrowly with a clear stop condition, run independent ones in parallel, and do quick lookups in the main thread instead of delegating them.`,0.15*st])}
+ if(big.length)out.push(['Three longest blocks of active work',big.map(r=>`${fmt(r[2])} ${r[3]}${r[6]?': '+r[6]:''}`).join(' | ')]);
+ if(t('implementing')/A<0.1)out.push([`Writing code is only ${pct(t('implementing'))} of active time`,'Most of the clock goes to process around the code (checks, waiting, git). That is where to look for time savings, not typing speed.']);
+ const ol=document.getElementById('sug');
+ out.sort((a,b)=>(b[2]||0)-(a[2]||0));
+ out.slice(0,8).forEach(([h,b,save])=>{const li=document.createElement('li'),bo=document.createElement('b'),sp=document.createElement('div');bo.textContent=save?`${h}. Could save about ${fmt(save)}`:h;sp.textContent=b;sp.style.color='var(--mut)';li.append(bo,sp);ol.appendChild(li)});
+ if(!out.length)ol.textContent='Nothing stands out: no phase dominates active time.';
+ if(!D.rows.some(r=>r[6])){const n=document.createElement('li');n.textContent='Some suggestions (repeated steps, independent lookups, the longest polling command) need labels; run without --no-detail to see them.';n.style.color='var(--mut)';ol.appendChild(n)}}
+suggest();
+if(SUBS.length){const b=document.createElement('button');b.setAttribute('aria-pressed','true');b.innerHTML=`<i class="sw" style="background:var(--fg);opacity:.3"></i>subagents (${SUBS.length})`;b.onclick=()=>{on.has('subagents')?on.delete('subagents'):on.add('subagents');b.setAttribute('aria-pressed',on.has('subagents'));draw()};lg.appendChild(b);
+ document.getElementById('subcard').hidden=false;const tb=document.getElementById('subtab');
+ SUBS.forEach((s,i)=>{const tr=document.createElement('tr'),a=document.createElement('td'),d=document.createElement('td'),m=document.createElement('td');a.textContent=`${s.type}${s.desc?': '+s.desc:''}`;d.className='n';d.textContent=fmt(s.end-s.start);
+  m.textContent=Object.entries(s.by).filter(([p])=>!/idle|human|async/.test(p)).sort((x,y)=>y[1]-x[1]).slice(0,2).map(([p])=>p).join(', ');tr.append(a,d,m);tr.style.cursor='pointer';tr.onclick=()=>{pinned=-1;showSub(i);const c=toDisp(s.start),w=Math.max(60,(toDisp(s.end)-c)*1.3);v0=c-w*0.1;v1=v0+w;clamp();draw();M.scrollIntoView({block:'nearest'})};tb.appendChild(tr)})}
+const T0={},ACT=[];D.rows.forEach(r=>T0[r[3]]=(T0[r[3]]||0)+r[2]);
+{const A=Object.entries(T0).filter(([k])=>!D.not_active.includes(k)).reduce((s,[,v])=>s+v,0),top=[...ACTIVE].sort((a,b)=>(T0[b]||0)-(T0[a]||0))[0],away=(T0['human wait']||0)+(T0['idle (long gap)']||0);
+ const K=[['Wall clock',fmt(D.real_span),'first to last event'],['Agent active',fmt(A),`${(100*A/D.real_span).toFixed(0)}% of wall clock`],['Waiting on you',fmt(away),'prompts and long gaps'],['Biggest phase',top,`${fmt(T0[top]||0)}, ${(100*(T0[top]||0)/(A||1)).toFixed(0)}% of active`],['Subagents',String(SUBS.length),SUBS.length?`${fmt(SUBS.reduce((s,x)=>s+(x.end-x.start),0))} of subagent time`:'none in this session']];
+ document.getElementById('kpis').innerHTML=K.map(([a,b,c])=>`<div class="kpi"><small>${a}</small><b>${b}</b><small>${c}</small></div>`).join('')}
+new ResizeObserver(draw).observe(M);draw();
+</script></body></html>

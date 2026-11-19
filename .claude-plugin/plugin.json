@@ -1,0 +1,6 @@
+{
+  "name": "agent-timeline",
+  "version": "0.1.0",
+  "description": "Where did your agent session's time go? A zoomable, hoverable timeline of any Claude Code, Codex or OpenCode session.",
+  "author": { "name": "rivusfounder", "url": "https://github.com/rivusfounder" }
+}

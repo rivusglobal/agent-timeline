@@ -49,8 +49,8 @@ class Timeline(unittest.TestCase):
 class Readme(unittest.TestCase):
     def test_local_images_exist(self):
         text = (ROOT / "README.md").read_text()
-        for path in re.findall(r'src="(assets/[^"]+)"', text):
-            self.assertTrue((ROOT / path).is_file(), path)
+        for path in re.findall(r'src="https://rivusglobal\.github\.io/agent-timeline/(assets/[^"]+)"', text):
+            self.assertTrue((ROOT / "docs" / path).is_file(), path)
 
 
 class Card(unittest.TestCase):

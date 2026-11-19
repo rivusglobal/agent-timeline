@@ -1,6 +1,6 @@
 """Zoomable phase timeline of one agent session -> self-contained HTML.
 
-Run: ``python3.12 agent_timeline.py [transcript] [--out FILE] [--open] [--no-detail] [--card FILE.svg]``.
+Run: ``python agent_timeline.py [transcript] [--out FILE] [--open] [--no-detail] [--card FILE.svg]``.
 Supports Claude Code, Codex CLI and OpenCode. Phase accounting is ``phase_report.py`` (the page and
 ``analyze`` read the same intervals); this module adds subagent lanes and the HTML page.
 

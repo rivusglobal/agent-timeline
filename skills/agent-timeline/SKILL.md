@@ -10,7 +10,7 @@ Generates a self-contained interactive HTML (wheel zoom, drag pan, minimap, phas
 ## Run
 
 ```bash
-python3.12 ~/.claude/skills/agent-timeline/agent_timeline.py --open
+python ~/.claude/skills/agent-timeline/agent_timeline.py --open
 ```
 
 - No argument: newest session across all supported agents (Claude prefers the current directory's project).

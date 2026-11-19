@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.12
+#!/usr/bin/env python
 """Where did a Claude Code session's wall-clock time go, by development phase.
 
 Reads transcripts (``~/.claude/projects/<proj>/<session>.jsonl``, subagent files
@@ -39,7 +39,7 @@ Reading the numbers:
   brace text like ``{while: 1}``, and the misses ``timeout -k 5 10 sleep``, ``bash -xc`` and
   ``FOO="a b" sleep``, which classify as other shell).
 
-Usage: ``python3.12 scripts/session_phase_report.py <transcript.jsonl | dir> [--days N]``
+Usage: ``python scripts/session_phase_report.py <transcript.jsonl | dir> [--days N]``
 """
 
 from __future__ import annotations

@@ -3,6 +3,6 @@ description: Use when the user asks where an agent session's time went, wants a 
 alwaysApply: false
 ---
 
-Run `python3.12 skills/agent-timeline/agent_timeline.py --open` (add `--no-detail` before the page is shared). It writes one self-contained HTML page and prints its path. Report the path and two or three findings from the numbers. Never put the session's text into a reply; the page already redacts it.
+Run `python skills/agent-timeline/agent_timeline.py --open` (add `--no-detail` before the page is shared). It writes one self-contained HTML page and prints its path. Report the path and two or three findings from the numbers. Never put the session's text into a reply; the page already redacts it.
 
 Cursor's own agent transcripts have no per-call timestamps and are not supported.

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.png" width="880" alt="43 hours of wall clock, 17 of them waiting on you: a real session timeline with a lane per phase.">
+  <img src="https://rivusglobal.github.io/agent-timeline/assets/banner.png" width="880" alt="43 hours of wall clock, 17 of them waiting on you: a real session timeline with a lane per phase.">
 </p>
 
 <h1 align="center">agent-timeline</h1>
@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="https://rivusglobal.github.io/agent-timeline/demo.html"><img src="assets/hero.png" width="880" alt="A session timeline: lanes per phase (implementing, local commands, waiting/polling, git/PR, human wait, async wait), a minimap, a pinned tooltip on a 20-minute human wait, and a list of what to change to deliver faster."></a>
+  <a href="https://rivusglobal.github.io/agent-timeline/demo.html"><img src="https://rivusglobal.github.io/agent-timeline/assets/hero.png" width="880" alt="A session timeline: lanes per phase (implementing, local commands, waiting/polling, git/PR, human wait, async wait), a minimap, a pinned tooltip on a 20-minute human wait, and a list of what to change to deliver faster."></a>
 </p>
 
 <p align="center">
@@ -34,7 +34,7 @@
 ## Demo
 
 ```console
-$ python3.12 agent_timeline.py --open
+$ python agent_timeline.py --open
 agent-timeline: reading claude session ~/.claude/projects/.../3f2a91c0.jsonl
 /tmp/agent-timeline-x8k2.html          # opens in your browser
 ```
@@ -58,7 +58,7 @@ A 40-minute session is rarely 40 minutes of work. Some of it is the model thinki
 agent-timeline reads it for you and draws it.
 
 <p align="center">
-  <img src="assets/demo.gif" width="880" alt="Demo: hover a 1px block, a test run, a 20-minute human wait with the agent's last message and your reply, an async wait, then zoom into the first 75 seconds and hover the hairlines.">
+  <img src="https://rivusglobal.github.io/agent-timeline/assets/demo.gif" width="880" alt="Demo: hover a 1px block, a test run, a 20-minute human wait with the agent's last message and your reply, an async wait, then zoom into the first 75 seconds and hover the hairlines.">
 </p>
 
 ## What you get
@@ -71,7 +71,7 @@ agent-timeline reads it for you and draws it.
 - **Honest numbers.** A built-in "How these numbers are computed" section. Gaps over 30 minutes are drawn as idle, shortened on the axis, real on the tooltip.
 
 <p align="center">
-  <img src="assets/hover.png" width="880" alt="The same page with a human-wait block pinned: Agent said: the client now retries 5xx responses..., You then: Yes, same for the refunds client.">
+  <img src="https://rivusglobal.github.io/agent-timeline/assets/hover.png" width="880" alt="The same page with a human-wait block pinned: Agent said: the client now retries 5xx responses..., You then: Yes, same for the refunds client.">
 </p>
 
 ## How it works
@@ -95,7 +95,7 @@ agent-timeline reads it for you and draws it.
 
 ```bash
 git clone https://github.com/rivusglobal/agent-timeline
-python3.12 agent-timeline/skills/agent-timeline/agent_timeline.py --open
+python agent-timeline/skills/agent-timeline/agent_timeline.py --open
 ```
 
 **Cursor:** the skill folder is a standard agent skill, so link it once and Cursor can run it, plus a `/agent-timeline` command:
@@ -110,12 +110,12 @@ Inside this repo, `.cursor/rules/agent-timeline.mdc` already tells Cursor when t
 ## Use
 
 ```bash
-python3.12 agent_timeline.py --open                      # newest session on this machine
-python3.12 agent_timeline.py --agent claude|codex|opencode
-python3.12 agent_timeline.py --session <id-prefix>
-python3.12 agent_timeline.py path/to/session.jsonl --out timeline.html
-python3.12 agent_timeline.py --no-detail --open          # share-safe: phases and durations only
-python3.12 agent_timeline.py --card card.svg             # 1200x630 share card: wall clock and who you waited on (numbers only)
+python agent_timeline.py --open                      # newest session on this machine
+python agent_timeline.py --agent claude|codex|opencode
+python agent_timeline.py --session <id-prefix>
+python agent_timeline.py path/to/session.jsonl --out timeline.html
+python agent_timeline.py --no-detail --open          # share-safe: phases and durations only
+python agent_timeline.py --card card.svg             # 1200x630 share card: wall clock and who you waited on (numbers only)
 ```
 
 In Claude Code, `/agent-timeline` does the same and tells you the two or three things the numbers say.

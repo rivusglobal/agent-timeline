@@ -15,12 +15,12 @@
 </p>
 
 <p align="center">
-  <a href="https://rivusfounder.github.io/agent-timeline/demo.html"><img src="assets/hero.png" width="880" alt="A session timeline: lanes per phase (implementing, local commands, waiting/polling, git/PR, human wait, async wait), a minimap, a pinned tooltip on a 20-minute human wait, and a list of what to change to deliver faster."></a>
+  <a href="https://rivusglobal.github.io/agent-timeline/demo.html"><img src="assets/hero.png" width="880" alt="A session timeline: lanes per phase (implementing, local commands, waiting/polling, git/PR, human wait, async wait), a minimap, a pinned tooltip on a 20-minute human wait, and a list of what to change to deliver faster."></a>
 </p>
 
 <p align="center">
   <strong>One command. One self-contained HTML file. Zoom, drag, hover, pin.</strong><br>
-  <a href="https://rivusfounder.github.io/agent-timeline/demo.html">Open the live demo</a> (a made-up session, nothing real in it).
+  <a href="https://rivusglobal.github.io/agent-timeline/demo.html">Open the live demo</a> (a made-up session, nothing real in it).
 </p>
 
 ---
@@ -57,7 +57,7 @@ agent-timeline reads it for you and draws it.
 **Claude Code**, as two separate prompts:
 
 ```
-/plugin marketplace add rivusfounder/agent-timeline
+/plugin marketplace add rivusglobal/agent-timeline
 ```
 ```
 /plugin install agent-timeline@agent-timeline
@@ -66,7 +66,7 @@ agent-timeline reads it for you and draws it.
 **Any other agent, or no agent:** it is plain Python 3.12, standard library only.
 
 ```bash
-git clone https://github.com/rivusfounder/agent-timeline
+git clone https://github.com/rivusglobal/agent-timeline
 python3.12 agent-timeline/skills/agent-timeline/agent_timeline.py --open
 ```
 

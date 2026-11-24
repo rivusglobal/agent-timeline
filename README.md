@@ -21,6 +21,12 @@
 </p>
 
 <p align="center">
+  <a href="https://rivusglobal.github.io/agent-timeline/demo.html"><b>Live demo</b></a> &nbsp;·&nbsp;
+  <code>/plugin marketplace add rivusglobal/agent-timeline</code> &nbsp;·&nbsp;
+  <a href="https://github.com/rivusglobal/agent-timeline">⭐ Star if it saves you a wait</a>
+</p>
+
+<p align="center">
   <a href="https://rivusglobal.github.io/agent-timeline/demo.html"><img src="https://rivusglobal.github.io/agent-timeline/assets/hero.png" width="880" alt="A session timeline: lanes per phase (implementing, local commands, waiting/polling, git/PR, human wait, async wait), a minimap, a pinned tooltip on a 20-minute human wait, and a list of what to change to deliver faster."></a>
 </p>
 

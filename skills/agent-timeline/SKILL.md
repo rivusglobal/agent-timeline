@@ -19,7 +19,9 @@ python ~/.claude/skills/agent-timeline/agent_timeline.py --open
 
 ## After running
 
-Say the output path and give 2-3 findings from the numbers (largest active phase, async wait share, polling). Publish as a private Artifact only if the user asks to share it.
+**Delegate, do not run inline.** The script reads a whole transcript and prints a lot, which would interrupt the main session's context. Spawn one subagent (Agent tool, `general-purpose`; in Cursor, a subagent/background task) with the run command and these instructions: run it, read the numbers, and reply with only the output path and 2-3 findings (largest active phase, async wait share, polling) in under 80 words. Never paste transcript text into the reply. Relay that reply to the user. If the host has no subagent tool, run it inline.
+
+Publish as a private Artifact only if the user asks to share it.
 
 ## Supported agents
 

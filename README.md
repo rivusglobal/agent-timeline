@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://rivusglobal.github.io/agent-timeline/assets/banner.png" width="880" alt="43 hours of wall clock, 17 of them waiting on you: a real session timeline with a lane per phase.">
+  <img src="https://rivusglobal.github.io/agent-timeline/assets/banner.png" width="880" alt="78 hours of agent time, about 27 of them avoidable: a real week-long session timeline with a lane per phase.">
 </p>
 
 <h1 align="center">agent-timeline</h1>

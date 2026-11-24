@@ -40,6 +40,7 @@ h2{font:600 17px/1.3 "Space Grotesk",Inter,sans-serif;margin:0 0 4px}
 <main>
 <header><h1>agent-timeline</h1>
 <p class="sub" id="sub"></p></header>
+<a id="save" href="#sug" style="display:none;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--implementing);border-radius:8px;padding:10px 14px"><span id="savebig" style="font:700 26px/1.2 'Space Grotesk',Inter,sans-serif;font-variant-numeric:tabular-nums"></span> <span id="savesub" style="color:var(--mut);font-size:13px"></span></a>
 <div class="kpis" id="kpis"></div>
 <div class="card">
 <div class="legend" id="legend" style="margin-bottom:10px"></div>
@@ -192,6 +193,9 @@ function suggest(){
  if(SUBS.length){const st=SUBS.reduce((s,x)=>s+(x.end-x.start),0),sb=[...SUBS].sort((a,b)=>(b.end-b.start)-(a.end-a.start))[0];out.push([`${SUBS.length} subagents ran for ${fmt(st)} in total`,`Longest: ${sb.type}${sb.desc?': '+sb.desc:''} (${fmt(sb.end-sb.start)}). Brief subagents narrowly with a clear stop condition, run independent ones in parallel, and do quick lookups in the main thread instead of delegating them.`,0.15*st])}
  if(big.length)out.push(['Three longest blocks of active work',big.map(r=>`${fmt(r[2])} ${r[3]}${r[6]?': '+r[6]:''}`).join(' | ')]);
  if(t('implementing')/A<0.1)out.push([`Writing code is only ${pct(t('implementing'))} of active time`,'Most of the clock goes to process around the code (checks, waiting, git). That is where to look for time savings, not typing speed.']);
+ const grp=h=>/^(Polling|Tests and local|Git and PR|\d+ context compaction)/.test(h)?'p':/subagents|^Waiting for you|idle on background/.test(h)?'w':'x';
+ const gw=out.filter(o=>o[2]&&grp(o[0])==='w').reduce((m,o)=>Math.max(m,o[2]),0),gp=out.filter(o=>o[2]&&grp(o[0])==='p').reduce((m,o)=>m+o[2],0),tot=gw+gp;
+ if(tot>=60&&nonIdle>0){document.getElementById('save').style.display='';document.getElementById('savebig').textContent=`~${fmt(tot)} could be saved`;document.getElementById('savesub').textContent=`of ${fmt(nonIdle)} tracked (${(100*tot/nonIdle).toFixed(0)}%). Rough estimate, overlapping findings counted once. See how to deliver faster below.`}
  const ol=document.getElementById('sug');
  out.sort((a,b)=>(b[2]||0)-(a[2]||0));
  out.slice(0,8).forEach(([h,b,save])=>{const li=document.createElement('li'),bo=document.createElement('b'),sp=document.createElement('div');bo.textContent=save?`${h}. Could save about ${fmt(save)}`:h;sp.textContent=b;sp.style.color='var(--mut)';li.append(bo,sp);ol.appendChild(li)});

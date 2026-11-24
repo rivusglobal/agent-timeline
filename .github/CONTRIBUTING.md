@@ -16,7 +16,7 @@ Any new text shown on the page must go through `phase_report.redact` and be drop
 
 ## The sample session
 
-`examples/sample-session.jsonl` and `docs/demo.html` are made up by `scripts/make_sample.py`. Never put a real session in this repo.
+`examples/sample-session.jsonl` and `docs/demo.html` are made up by `scripts/make_sample.py`. Never put a real session in this repo (no transcripts or pages). `docs/assets/real-session.png` is a cropped screenshot of the maintainers' own session, with task titles and paths cropped out.
 
 ## Logo, banner and demo GIF
 

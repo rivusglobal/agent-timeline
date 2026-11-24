@@ -66,6 +66,13 @@ class Card(unittest.TestCase):
         self.assertNotIn("payments", svg)
 
 
+class Headline(unittest.TestCase):
+    def test_savings_headline_sits_above_the_timeline(self):
+        page = (ROOT / "docs" / "demo.html").read_text()
+        self.assertIn("could be saved", page)
+        self.assertLess(page.index('id="save"'), page.index('id="main"'))
+
+
 class Cursor(unittest.TestCase):
     def test_cursor_files_point_at_the_script(self):
         for rel in (".cursor/commands/agent-timeline.md", ".cursor/rules/agent-timeline.mdc"):

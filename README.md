@@ -80,12 +80,12 @@ agent-timeline reads it for you and draws it.
   <img src="https://rivusglobal.github.io/agent-timeline/assets/hover.png" width="880" alt="The same page with a human-wait block pinned: Agent said: the client now retries 5xx responses..., You then: Yes, same for the refunds client.">
 </p>
 
-### A real session
+### A real session: ~27 hours of savings found
 
-One week of a real Claude Code session, run on a trading codebase: 412 subagents (171 h of subagent time), 60 h of async wait on background jobs, and 5 h waiting on a human. The panel ranks what to change, biggest saving first, and the table shows the phase split.
+One week of a real Claude Code session on a trading codebase: 163 h of wall clock, 77.7 h tracked, 412 subagents. agent-timeline flags **~27 h (35%) that could be saved**, and the headline sits right above the timeline so it is the first thing you see. The biggest findings: subagents run one after another instead of in parallel, 78% of tracked time spent idle on background jobs, and slow git/PR calls. Estimates are rough and overlapping findings are counted once.
 
 <p align="center">
-  <img src="https://rivusglobal.github.io/agent-timeline/assets/real-session.png" width="880" alt="A real week-long session: 'How to deliver faster' ranks 412 subagents running 171 h, 78% of tracked time idle on background work, 191 subagents run back to back in 76 chains, and git/PR work at 34% of active time; the table splits time by phase.">
+  <img src="https://rivusglobal.github.io/agent-timeline/assets/real-session.png" width="880" alt="A real week-long session: the headline reads ~27.02 h could be saved of 77.73 h tracked (35%), above the KPI cards and the zoomable timeline with a lane per phase.">
 </p>
 
 ## How it works
